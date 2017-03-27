@@ -1,0 +1,164 @@
+//    private BleWrapper mBleWrapper;
+//    private BleWrapperUiCallbacks mUiCallbacks = new BleWrapperUiCallbacks() {
+//
+//        @Override
+//        public void bluetoothOpened() {
+//            for (Callback callback : mCallbacks) {
+//                callback.onBluetoothOn();
+//            }
+//        }
+//
+//        @Override
+//        public void bluetoothClosed() {
+//            for (Callback callback : mCallbacks) {
+//                callback.onBluetoothOff();
+//            }
+//        }
+//
+//        @Override
+//        public void uiDeviceFound(BluetoothDevice device, int rssi, byte[] record) {
+//            // TODO: 2017/3/10 DeviceUUID.generateShortUuid is tmp action need to fix
+//            // FIXME: 2017/3/10 device uuid generate
+//            Device mydevice = new Device(DeviceUUID.generateShortUuid(), device.getName() == null ? "unknown device" : device.getName(), device.getAddress());
+//            mydevice.setInRange(true);
+//            int index = mBondedList.indexOf(mydevice);
+//            if (index >= 0) {
+//                if (!mBondedList.get(index).isInRange()) {
+//                    mBondedList.get(index).setInRange(true);
+//                    Collections.sort(mBondedList);
+//                    for (Callback callback : mCallbacks) {
+//                        callback.onDeviceInRange(mydevice);
+//                    }
+//                }
+//            } else {
+//                if (!mScannedList.contains(mydevice)) {
+//                    mScannedList.add(mydevice);
+//                    Collections.sort(mScannedList);
+//                    for (Callback callback : mCallbacks) {
+//                        callback.onDeviceNewScanned(mydevice);
+//                    }
+//                    mDeviceList.add(mydevice);
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void uiDeviceConnected(BluetoothGatt gatt, BluetoothDevice device) {
+//            setState(STATE_CONNECTED, device, device.getAddress(), null);
+//        }
+//
+//        @Override
+//        public void uiDeviceDisconnected(BluetoothGatt gatt, BluetoothDevice device) {
+//            setState(STATE_NO_CONNECT, device, device.getAddress(), null);
+//        }
+//
+//        @Override
+//        public void uiAvailableServices(BluetoothGatt gatt, BluetoothDevice device, List<BluetoothGattService> services) {
+//            for (BluetoothGattService service : services) {
+//                Log.d(TAG, service.getUuid().toString());
+//                if (BleDefinedUUIDs.Service.HEARING_SERVICE.equals(service.getUuid())) {
+//                    addLog("hearing service found!");
+//                    mComService = service;
+//                    mBleWrapper.getCharacteristicsForService(mComService);
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void uiCharacteristicForService(BluetoothGatt gatt, BluetoothDevice device, BluetoothGattService service, List<BluetoothGattCharacteristic> chars) {
+//            for (BluetoothGattCharacteristic characteristic : chars) {
+//                if (BleDefinedUUIDs.Characteristic.READ_DATA.equals(characteristic.getUuid())) {
+//                    addLog("data transfor found");
+//                    mDataCharateristic = characteristic;
+//                } else if (BleDefinedUUIDs.Characteristic.SENT_ORDER.equals(characteristic.getUuid())) {
+//                    addLog("command found");
+//                    mCmdCharateristic = characteristic;
+//                    mBleWrapper.setNotificationForCharacteristic(mCmdCharateristic, true);
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void uiCharacteristicsDetails(BluetoothGatt gatt, BluetoothDevice device, BluetoothGattService service, BluetoothGattCharacteristic characteristic) {
+//
+//        }
+//
+//        @Override
+//        public void uiNewValueForCharacteristic(BluetoothGatt gatt, BluetoothDevice device, BluetoothGattService service, BluetoothGattCharacteristic ch, String strValue, int intValue, byte[] rawValue, String timestamp) {
+//            if (ch.getUuid().equals(mDataCharateristic.getUuid())) {
+//                recordManager.appendWav(rawValue);
+//                for (Callback callback : mCallbacks) {
+//                    callback.onDataTransform();
+//                    callback.onDataTransform(rawValue);
+//                }
+//            } else if (ch.getUuid().equals(mCmdCharateristic.getUuid())) {
+//                handleCmd(rawValue);
+//            }
+//        }
+//
+//        @Override
+//        public void uiGotNotification(BluetoothGatt gatt, BluetoothDevice device, BluetoothGattService service, BluetoothGattCharacteristic characteristic) {
+//
+//        }
+//
+//        @Override
+//        public void uiSuccessfulWrite(BluetoothGatt gatt, BluetoothDevice device, BluetoothGattService service, BluetoothGattCharacteristic ch, String description) {
+//            if (ch.getUuid().equals(mCmdCharateristic.getUuid())) {
+//                if (Arrays.equals(ch.getValue(), ORDER_START_RECORDING)) {
+//                    addLog("start recording send success");
+//                } else if (Arrays.equals(ch.getValue(), ORDER_START_TRANSFOR)) {
+//                    addLog("start transform send success");
+//                } else if (Arrays.equals(ch.getValue(), ORDER_FINISH_TRANSFOR)) {
+//                    addLog("finish transform send success");
+//                } else if (Arrays.equals(ch.getValue(), ORDER_FAILED_TRANSFOR)) {
+//                    addLog("failed transform send success");
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void uiFailedWrite(BluetoothGatt gatt, BluetoothDevice device, BluetoothGattService service, BluetoothGattCharacteristic ch, String description) {
+//            if (ch.getUuid().equals(mCmdCharateristic.getUuid())) {
+//                if (Arrays.equals(ch.getValue(), ORDER_START_RECORDING)) {
+//                    addLog("start recording send failed");
+//                } else if (Arrays.equals(ch.getValue(), ORDER_START_TRANSFOR)) {
+//                    addLog("start recording send failed");
+//                } else if (Arrays.equals(ch.getValue(), ORDER_FINISH_TRANSFOR)) {
+//                    addLog("start recording send failed");
+//                } else if (Arrays.equals(ch.getValue(), ORDER_FAILED_TRANSFOR)) {
+//                    addLog("start recording send failed");
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void uiNewRssiAvailable(BluetoothGatt gatt, BluetoothDevice device, int rssi) {
+//
+//        }
+//    };
+
+//            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+//                try {
+//                    Class ss = Class.forName(ScanRecord.class.getName());
+//                    Method parseFromBytes = ss.getMethod("parseFromBytes", byte[].class);
+//                    parseFromBytes.setAccessible(true);
+//                    ScanRecord record = (ScanRecord) parseFromBytes.invoke(null, scanRecord);
+//                    List<ParcelUuid> uuids = record.getServiceUuids();
+//                    if (uuids != null) {
+//                        for (int i = 0; i < uuids.size(); i++) {
+//                            Log.e(TAG, uuids.get(i).getUuid().toString());
+//                            if ("0000ffe0-0000-1000-8000-00805f9b34fb".equals(uuids.get(i).getUuid().toString())) {
+//
+//                            }
+//                        }
+//                    }
+//                } catch (ClassNotFoundException e) {
+//                    e.printStackTrace();
+//                } catch (NoSuchMethodException e) {
+//                    e.printStackTrace();
+//                } catch (InvocationTargetException e) {
+//                    e.printStackTrace();
+//                } catch (IllegalAccessException e) {
+//                    e.printStackTrace();
+//                }
+//            }
